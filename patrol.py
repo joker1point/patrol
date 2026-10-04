@@ -94,7 +94,8 @@ def do_check(args: argparse.Namespace) -> int:
             continue
         print(f"   [{i}/{len(cands)}] {proc}  {human(cand['total'])}  → 取证中…")
         try:
-            case = mock_case(cand) if provider["name"] == "mock" else run_case(cand, provider, args.max_turns)
+            case = (mock_case(cand) if provider["name"] == "mock"
+                    else run_case(cand, provider, args.max_turns, timeout=args.timeout))
         except Exception as exc:  # noqa: BLE001 - 单个候选失败不拖垮整轮巡逻
             print(f"         取证失败：{type(exc).__name__}: {exc}")
             continue
@@ -131,6 +132,8 @@ def main() -> int:
     ap.add_argument("--test-alert", action="store_true", help="弹一次测试告警（验证通道）")
     ap.add_argument("--cooldown", type=float, default=COOLDOWN_HOURS, help="同进程冷却小时数（默认 6）")
     ap.add_argument("--max-turns", type=int, default=MAX_TURNS, help="取证轮数上限（默认 6）")
+    ap.add_argument("--timeout", type=float, default=120.0,
+                    help="单次模型请求超时（秒，默认 120）——本地小模型建议 300+")
     ap.add_argument("--json", type=str, help="（预筛模式）候选落盘路径")
     ap.add_argument("--factor", type=float, default=FACTOR)
     ap.add_argument("--min-cur", type=int, default=MIN_CUR, help="量级突破绝对底线（字节）")

@@ -46,8 +46,12 @@ def load_provider(force_mock: bool = False, overrides: dict | None = None) -> di
         return {"name": "mock", "label": "mock（不联网，仍真跑工具）",
                 "base_url": "", "api_key": "", "model": "mock"}
     if name == "ollama":
+        # 注意：**不回退到配置文件里的 base_url** —— 那是给远端 provider 的。
+        # 实测踩过（2026-10-04）：flowwatch 配置里存着远端 base_url，
+        # 切到 Ollama 后地址被污染 → 请求打去远端 404。
+        ollama_base = overrides.get("base_url") or os.environ.get("PATROL_BASE_URL") or ""
         return {"name": "ollama", "label": f"本地 Ollama · {model or '未指定'}",
-                "base_url": (base or "http://127.0.0.1:11434/v1").rstrip("/"),
+                "base_url": (ollama_base or "http://127.0.0.1:11434/v1").rstrip("/"),
                 "api_key": key or "ollama", "model": model or "qwen2.5:7b"}
     if name == "openai" and base and model:
         return {"name": "openai", "label": f"远端 · {model}",
@@ -361,11 +365,13 @@ def _post_json(url: str, payload: dict, headers: dict, timeout: float = 120.0) -
 
 
 def chat_completion(provider: dict, messages: list[dict], tools: list[dict] | None = None,
-                    force_tool: bool = False) -> dict:
+                    force_tool: bool = False, timeout: float = 120.0) -> dict:
     """调一次 chat/completions，返回 assistant message（content + tool_calls）。
 
     force_tool=True → 协议层声明 tool_choice="required"；provider 不认（400/404/422）
     则如实退回 auto，不报错——与 flowwatch 助手的兼容策略同源。
+    timeout 默认 120s：远端 API 够用；**本地小模型建议 300s+**（实测 qwen2.5:3b
+    首次加载 + 2000+ token 取证提示词会超出 120s，2026-10-04 踩过）。
     """
     payload: dict = {"model": provider["model"], "messages": messages, "temperature": 0.2}
     if tools:
@@ -376,11 +382,11 @@ def chat_completion(provider: dict, messages: list[dict], tools: list[dict] | No
         headers["Authorization"] = f"Bearer {provider['api_key']}"
     url = provider["base_url"].rstrip("/") + "/chat/completions"
     try:
-        data = _post_json(url, payload, headers)
+        data = _post_json(url, payload, headers, timeout=timeout)
     except urllib.error.HTTPError as exc:
         if force_tool and exc.code in (400, 404, 422):       # 这家 provider 不认 required
             payload["tool_choice"] = "auto"
-            data = _post_json(url, payload, headers)
+            data = _post_json(url, payload, headers, timeout=timeout)
         else:
             raise
     choices = data.get("choices") or [{}]
@@ -435,7 +441,8 @@ def parse_verdict(answer: str) -> str:
     return "未分类"
 
 
-def run_case(candidate: dict, provider: dict, max_turns: int = MAX_TURNS) -> dict:
+def run_case(candidate: dict, provider: dict, max_turns: int = MAX_TURNS,
+             timeout: float = 120.0) -> dict:
     """对一个候选做多步取证。最后一轮不带 tools，强制模型给结论。"""
     started = time.time()
     messages: list[dict] = [
@@ -449,7 +456,7 @@ def run_case(candidate: dict, provider: dict, max_turns: int = MAX_TURNS) -> dic
         last = turn == max_turns - 1
         force = turn == 0 and not trace            # 首轮协议层强制取证（比提示词可靠）
         msg = chat_completion(provider, messages, None if last else TOOL_SCHEMAS,
-                              force_tool=force)
+                              force_tool=force, timeout=timeout)
         content = msg.get("content") or ""
         tool_calls = msg.get("tool_calls") or []
         if not tool_calls:
