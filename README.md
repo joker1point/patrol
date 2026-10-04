@@ -1,5 +1,8 @@
 # patrol
 
+![version](https://img.shields.io/badge/version-0.1.0-blue)
+![license](https://img.shields.io/badge/license-MIT-green)
+
 > 让 AI Agent 帮你盯着本机流量与进程：**自动发现异常、多步取证、只对可疑的告警**。
 > portwatch 回答「此刻谁占着端口」，flowwatch 回答「历史上谁在用带宽」——patrol 回答「**有没有不正常**」。
 >

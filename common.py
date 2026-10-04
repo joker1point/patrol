@@ -13,6 +13,8 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
+__version__ = "0.1.0"     # 与 git tag / README badge 同源（发版时三处一起改）
+
 ROOT = Path(__file__).resolve().parent
 RUN_DIR = ROOT / "_run"
 REPORTS_DIR = RUN_DIR / "reports"

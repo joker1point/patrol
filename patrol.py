@@ -29,7 +29,7 @@ from pathlib import Path
 from common import (
     ABS_BIG, CONN_DAYS, CONN_MIN, COOLDOWN_HOURS, CRON_LOG, FACTOR, HIST_DAYS,
     MAX_TURNS, MIN_CUR, NEW_MIN, NEW_MIN_RATE, RUN_DIR, WINDOW,
-    connect, human, iso,
+    __version__, connect, human, iso,
 )
 from forensics import load_provider, mock_case, run_case
 from report import alert, load_state, notify_case, save_report, save_state
@@ -122,6 +122,7 @@ def main() -> int:
             pass
 
     ap = argparse.ArgumentParser(description="patrol —— 本机流量巡检（预筛 + Agent 取证）")
+    ap.add_argument("--version", action="version", version=f"patrol {__version__}")
     ap.add_argument("--check", action="store_true", help="完整巡逻：预筛 → 取证 → 报告")
     ap.add_argument("--case", type=str, metavar="PROCESS", help="手动指定进程作为候选（跳过预筛）")
     ap.add_argument("--replay", type=int, metavar="HOURS", help="回测最近 N 小时（只做预筛）")
