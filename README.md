@@ -2,6 +2,9 @@
 
 > 让 AI Agent 帮你盯着本机流量与进程：**自动发现异常、多步取证、只对可疑的告警**。
 > portwatch 回答「此刻谁占着端口」，flowwatch 回答「历史上谁在用带宽」——patrol 回答「**有没有不正常**」。
+>
+> *Let an AI agent watch your machine's traffic and processes — auto-detect anomalies,
+> multi-step forensics, alert only when suspicious.*
 
 三个产品是一条线：**观测 → 留档 → 守护**。patrol 是第三层——它不替你下结论，
 它把「值得看一眼的进程」挑出来，让 Agent 取证，把证据链放在你面前。
