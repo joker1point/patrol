@@ -12,6 +12,18 @@
 三个产品是一条线：**观测 → 留档 → 守护**。patrol 是第三层——它不替你下结论，
 它把「值得看一眼的进程」挑出来，让 Agent 取证，把证据链放在你面前。
 
+<p align="center">
+  <img src="docs/screenshots/patrol-replay.png" width="820"
+       alt="patrol --replay 168：回测最近 168 小时，共 1 条候选（平均 0.1 条/天）"><br>
+  <em>预筛层回测：一周只挑出 1 条值得看的进程（纯规则，零模型成本）</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/patrol-forensics.png" width="820"
+       alt="patrol --check：预筛 → Agent 取证 → 报告，本次结论「正常／无需处理」"><br>
+  <em>完整巡逻：预筛 → Agent 多步取证 → 落档报告。这条最后结论是「无需处理」——所以它不会打扰你</em>
+</p>
+
 ## 它能帮你做什么（先说人话）
 
 一句话：把你电脑上「谁在用网、有没有不正常」这件事，从「你得自己盯着」变成
