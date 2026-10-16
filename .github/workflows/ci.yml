@@ -1,0 +1,38 @@
+name: ci
+
+# push / PR 必跑（2026-10-16 起）：
+#   · 语法检查（compileall）→ 预筛信号单测（零依赖，直接跑脚本）
+#   · README 素材规范（数量按功能点数、形式按复杂度；脚本与桌面《开源项目标准》同源）
+#   · 对外材料红线（代理软件品牌词 + 高置信凭据；公开仓一次都不能出现）
+#
+# 顺序说明：先用最便宜的语法闸门拦住低级错误，再跑单测与文档闸门。
+
+on:
+  push:
+  pull_request:
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  checks:
+    name: "语法 · 单测 · 文档闸门"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: "语法检查（compileall）"
+        run: python -m compileall -q screen.py common.py forensics.py report.py patrol.py scripts tests tools
+
+      - name: "预筛信号单测（纯函数）"
+        run: python tests/test_screen.py
+
+      - name: "README 素材规范"
+        run: python tools/check_readme_shots.py .
+
+      - name: "对外材料红线（品牌词 / 凭据）"
+        run: python tools/check_public_materials.py
